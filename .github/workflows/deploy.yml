@@ -14,16 +14,23 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Konfigurer AWS Credentials
+        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
+      - name: Hopp over deploy uten AWS-secrets
+        if: ${{ secrets.AWS_ACCESS_KEY_ID == '' || secrets.AWS_SECRET_ACCESS_KEY == '' }}
+        run: echo "Skipping deploy because AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY are not configured."
+
       - name: Bygg SAM app
+        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
         run: sam build --use-container --template-file sentiment-demo/template.yaml
 
       - name: Deploy SAM app
+        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
         run: |
           sam deploy \
             --no-confirm-changeset \
